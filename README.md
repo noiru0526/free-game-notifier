@@ -1,17 +1,64 @@
-# flutter_application_1
+# 🎮 Free Game Notifier
 
-A new Flutter project.
+期間限定で**無料・割引**になったゲームをお知らせするモバイルアプリです。
+AIがあなたの好みに合わせてゲームをおすすめしてくれます。
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 概要
 
-A few resources to get you started if this is your first Flutter project:
+Epic Games Store などで元々有料だったゲームが期間限定で無料・割引になったとき、プッシュ通知でお知らせします。
+好きなジャンルを登録しておくと、AIが「なぜあなたにおすすめか」を説明してくれるレコメンド機能も搭載しています。
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 主な機能
+
+- **無料通知** — 期間限定無料ゲームをプッシュ通知でお知らせ
+- **割引通知** — 設定した割引率以上のゲームを通知（ON/OFF・割引率をスライダーで設定）
+- **AIレコメンド** — あなたの好みのジャンルをもとにClaude AIがおすすめ理由を生成
+- **ゲーム詳細** — 元の価格・無料期間または割引率・ストアリンク・おすすめ理由を表示
+- **カウントダウン** — 無料・割引終了まであと何日かを表示
+- **日本語 / 英語** 対応
+
+---
+
+## 対応ストア
+
+| ストア | 無料 | 割引 | 状況 |
+|---|---|---|---|
+| Epic Games Store | ✅ | ✅ | 対応予定 |
+| GOG.com | ✅ | ✅ | 対応予定 |
+| Steam | ✅ | ✅ | 対応予定 |
+
+---
+
+## 技術スタック
+
+| 項目 | 内容 |
+|---|---|
+| フロントエンド | Flutter (Dart) |
+| 状態管理 | Riverpod |
+| バックエンド | Firebase Cloud Functions |
+| データベース | Firestore |
+| 通知 | Firebase Cloud Messaging (FCM) |
+| AI | Claude API (Anthropic) |
+| ゲーム情報 | Epic Games API / RAWG API |
+
+---
+
+## 開発フェーズ
+
+- [x] 設計・環境構築
+- [ ] フェーズ1：バックエンド構築（Firebase・API連携）
+- [ ] フェーズ2：Flutterアプリ基盤
+- [ ] フェーズ3：UI改善
+- [ ] フェーズ4：ストア拡張（GOG.com・Steam）
+- [ ] フェーズ5：リリース（Google Play・App Store）
+
+---
+
+## 対応プラットフォーム
+
+- Android
+- iOS
