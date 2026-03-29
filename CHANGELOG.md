@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-03-30
+
+### Added
+- Firebase CLIをWSLにインストール (@noiru0526)
+- Firebaseプロジェクト作成・Blazeプランへアップグレード (@noiru0526)
+- Firestoreデータベース作成（asia-northeast1） (@noiru0526)
+- Cloud Functions初期化（JavaScript） (@noiru0526)
+
 ## [0.0.3] - 2026-03-30
 
 ### Added
