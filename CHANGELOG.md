@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-03-30
+
+### Added
+- `firebase.json` / `.firebaserc` — Firebaseプロジェクト設定ファイルを追加 (@noiru0526)
+- `functions/index.js` — Cloud Functions初期ファイルを追加 (@noiru0526)
+- `functions/package.json` — Cloud Functions依存関係を追加 (@noiru0526)
+
 ## [0.0.2] - 2026-03-30
 
 ### Added
