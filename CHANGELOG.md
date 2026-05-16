@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-16
+
+### Added
+- `lib/screens/game_detail_screen.dart` — AIおすすめ・スコア表示 (@noiru0526)
+  - `aiRecommendation` フィールドをグラジェントカードで表示（✨ Claude AIのおすすめ）
+  - Metacriticスコア + ユーザー評価バッジ（_ScoreBadge）
+  - Metacriticスコアに応じた色分け（75以上=緑/50以上=黄/未満=赤）
+
+### Changed
+- `lib/data/game_offer.dart` — フィールド追加 (@noiru0526)
+  - `backgroundImage`, `aiRecommendation`, `metacritic`, `rating` を追加
+  - `fromJson()` で全フィールドをマッピング
+
 ## [0.1.7] - 2026-05-16
 
 ### Added

@@ -6,9 +6,13 @@ class GameOffer {
   final String status;
   final double originalPrice;
   final String? thumbnailUrl;
+  final String? backgroundImage;
   final List<String> genres;
   final DateTime? offerEnd;
   final String? pageSlug;
+  final String? aiRecommendation;
+  final int? metacritic;
+  final double? rating;
 
   const GameOffer({
     required this.id,
@@ -18,9 +22,13 @@ class GameOffer {
     required this.status,
     required this.originalPrice,
     this.thumbnailUrl,
+    this.backgroundImage,
     this.genres = const [],
     this.offerEnd,
     this.pageSlug,
+    this.aiRecommendation,
+    this.metacritic,
+    this.rating,
   });
 
   factory GameOffer.fromJson(Map<String, dynamic> json) {
@@ -32,6 +40,7 @@ class GameOffer {
       status: json['status'] as String? ?? 'free',
       originalPrice: (json['originalPrice'] as num?)?.toDouble() ?? 0.0,
       thumbnailUrl: json['thumbnailUrl'] as String?,
+      backgroundImage: json['backgroundImage'] as String?,
       genres: (json['genres'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -40,6 +49,9 @@ class GameOffer {
           ? DateTime.tryParse(json['offerEnd'].toString())
           : null,
       pageSlug: json['pageSlug'] as String?,
+      aiRecommendation: json['aiRecommendation'] as String?,
+      metacritic: json['metacritic'] as int?,
+      rating: (json['rating'] as num?)?.toDouble(),
     );
   }
 

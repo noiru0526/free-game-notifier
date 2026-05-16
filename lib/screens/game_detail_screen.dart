@@ -120,6 +120,75 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                     const SizedBox(height: AppSpacing.lg),
                   ],
 
+                  // AI Recommendation
+                  if (offer.aiRecommendation != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.paddingComfortable),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.interactivePrimary.withOpacity(0.12),
+                            AppColors.interactiveAccent.withOpacity(0.08),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+                        border: Border.all(
+                            color: AppColors.interactivePrimary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('✨', style: TextStyle(fontSize: 16)),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Claude AIのおすすめ',
+                                  style: AppTypography.labelSmall.copyWith(
+                                      color: AppColors.interactivePrimary),
+                                ),
+                                const SizedBox(height: AppSpacing.xs2),
+                                Text(offer.aiRecommendation!,
+                                    style: AppTypography.body),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
+                  // Scores row
+                  if (offer.metacritic != null || offer.rating != null) ...[
+                    Row(
+                      children: [
+                        if (offer.metacritic != null) ...[
+                          _ScoreBadge(
+                            label: 'Metacritic',
+                            score: offer.metacritic!.toString(),
+                            color: offer.metacritic! >= 75
+                                ? const Color(0xFF66CC33)
+                                : offer.metacritic! >= 50
+                                    ? const Color(0xFFFFCC33)
+                                    : const Color(0xFFFF0000),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                        ],
+                        if (offer.rating != null) ...[
+                          _ScoreBadge(
+                            label: 'ユーザー評価',
+                            score: '★ ${offer.rating!.toStringAsFixed(1)}',
+                            color: AppColors.interactiveAccent,
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
                   // Description
                   Text('ゲーム概要', style: AppTypography.h4),
                   const SizedBox(height: AppSpacing.sm),
@@ -290,6 +359,36 @@ class _PlatformBadge extends StatelessWidget {
         label,
         style:
             AppTypography.labelSmall.copyWith(color: color, letterSpacing: 0.8),
+      ),
+    );
+  }
+}
+
+class _ScoreBadge extends StatelessWidget {
+  final String label;
+  final String score;
+  final Color color;
+  const _ScoreBadge({required this.label, required this.score, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(AppSpacing.chipRadius),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: AppTypography.caption.copyWith(color: color, fontSize: 9)),
+          Text(score,
+              style: AppTypography.label.copyWith(
+                  color: color, fontWeight: FontWeight.w700)),
+        ],
       ),
     );
   }
