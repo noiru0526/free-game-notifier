@@ -244,6 +244,7 @@ class _GameListViewState extends State<_GameListView> {
                   ),
                 ),
               ),
+              // ── Hero: まもなく終了（大判カード）──
               if (expiringSoon.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
@@ -260,16 +261,41 @@ class _GameListViewState extends State<_GameListView> {
                     ),
                   ),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) => _OfferTile(
-                      offer: expiringSoon[i],
-                      onClaim: () => _showClaimDialog(context, expiringSoon[i]),
-                      claimed: false,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: HeroGameCard(
+                      offer: _OfferTile(offer: expiringSoon[0]).toHeroGameOffer(),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => GameDetailScreen(offer: expiringSoon[0]),
+                      )),
+                      onClaim: () => _showClaimDialog(context, expiringSoon[0]),
                     ),
-                    childCount: expiringSoon.length,
                   ),
                 ),
+                if (expiringSoon.length > 1)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: AppSpacing.sm,
+                        mainAxisSpacing: AppSpacing.sm,
+                        childAspectRatio: 0.72,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (_, i) => GameCard(
+                          offer: _OfferTile(offer: expiringSoon[i + 1]).toHeroGameOffer(),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => GameDetailScreen(offer: expiringSoon[i + 1]),
+                          )),
+                          onClaim: () => _showClaimDialog(context, expiringSoon[i + 1]),
+                        ),
+                        childCount: expiringSoon.length - 1,
+                      ),
+                    ),
+                  ),
               ],
               if (freeNow.isNotEmpty) ...[
                 SliverToBoxAdapter(
@@ -279,14 +305,25 @@ class _GameListViewState extends State<_GameListView> {
                     child: Text('無料で入手できるゲーム', style: AppTypography.h4),
                   ),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) => _OfferTile(
-                      offer: freeNow[i],
-                      onClaim: () => _showClaimDialog(context, freeNow[i]),
-                      claimed: false,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                      childAspectRatio: 0.72,
                     ),
-                    childCount: freeNow.length,
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => GameCard(
+                        offer: _OfferTile(offer: freeNow[i]).toHeroGameOffer(),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(offer: freeNow[i]),
+                        )),
+                        onClaim: () => _showClaimDialog(context, freeNow[i]),
+                      ),
+                      childCount: freeNow.length,
+                    ),
                   ),
                 ),
               ],
@@ -305,10 +342,24 @@ class _GameListViewState extends State<_GameListView> {
                     ),
                   ),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) => _OfferTile(offer: upcoming[i]),
-                    childCount: upcoming.length,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                      childAspectRatio: 0.72,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => GameCard(
+                        offer: _OfferTile(offer: upcoming[i]).toHeroGameOffer(),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(offer: upcoming[i]),
+                        )),
+                      ),
+                      childCount: upcoming.length,
+                    ),
                   ),
                 ),
               ],
@@ -340,10 +391,24 @@ class _GameListViewState extends State<_GameListView> {
                     ),
                   ),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) => _OfferTile(offer: claimedGames[i], claimed: true),
-                    childCount: claimedGames.length,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                      childAspectRatio: 0.72,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => GameCard(
+                        offer: _OfferTile(offer: claimedGames[i], claimed: true).toHeroGameOffer(),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(offer: claimedGames[i]),
+                        )),
+                      ),
+                      childCount: claimedGames.length,
+                    ),
                   ),
                 ),
               ],
@@ -454,29 +519,32 @@ class _OfferTile extends StatelessWidget {
 
   const _OfferTile({required this.offer, this.onClaim, this.claimed = false});
 
+  GameOffer _toGameOffer() => GameOffer(
+    id: offer.id,
+    title: offer.title,
+    description: offer.description,
+    thumbnailUrl: offer.thumbnailUrl,
+    status: claimed
+        ? GameStatus.claimed
+        : (offer.isFree &&
+                offer.timeRemaining != null &&
+                offer.timeRemaining!.inHours < 48
+            ? GameStatus.expiringSoon
+            : _mapStatus(offer.status)),
+    platform: _mapPlatform(offer.platform),
+    genres: offer.genres,
+    expiresAt: offer.offerEnd,
+    originalPrice: offer.originalPrice,
+    discountPercentage: offer.discountPercentage,
+    discountedPrice: offer.discountedPrice,
+    isNew: !claimed && offer.isFree && offer.timeRemaining != null &&
+        offer.timeRemaining!.inHours < 24,
+    aiRecommendation: offer.aiRecommendation,
+  );
+
   @override
   Widget build(BuildContext context) {
-    final gameOffer = GameOffer(
-      id: offer.id,
-      title: offer.title,
-      description: offer.description,
-      thumbnailUrl: offer.thumbnailUrl,
-      status: claimed
-          ? GameStatus.claimed
-          : (offer.isFree &&
-                  offer.timeRemaining != null &&
-                  offer.timeRemaining!.inHours < 48
-              ? GameStatus.expiringSoon
-              : _mapStatus(offer.status)),
-      platform: _mapPlatform(offer.platform),
-      genres: offer.genres,
-      expiresAt: offer.offerEnd,
-      originalPrice: offer.originalPrice,
-      discountPercentage: offer.discountPercentage,
-      discountedPrice: offer.discountedPrice,
-      isNew: !claimed && offer.isFree && offer.timeRemaining != null &&
-          offer.timeRemaining!.inHours < 24,
-    );
+    final gameOffer = _toGameOffer();
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
@@ -492,6 +560,8 @@ class _OfferTile extends StatelessWidget {
       ),
     );
   }
+
+  GameOffer toHeroGameOffer() => _toGameOffer();
 
   GameStatus _mapStatus(String s) {
     switch (s) {

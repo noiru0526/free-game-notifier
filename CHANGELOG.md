@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-17
+
+### Changed (UIフルリデザイン Round 1)
+- `lib/core/widgets/game_card.dart` — 縦型大判カードに全面リデザイン
+  - 横並びレイアウト → 縦型（上部に画像140px・下部にコンテンツ）
+  - `HeroGameCard` 追加 — まもなく終了ゲームをフルワイド大判カード表示
+  - `_CountdownTimer` (StatefulWidget) — リアルタイムカウントダウン（毎秒更新）
+  - `_AiRecommendationBadge` — AI推薦文をグラデーション枠で目立つ位置に表示
+  - `_FreeBadge` — グロー効果付きFREE/割引バッジ
+  - 画像エリアにグラデーションオーバーレイ追加
+  - expiringSoon時のオレンジグロー効果を強化
+- `lib/main.dart` — ゲームリストをグリッドレイアウトに変更
+  - `expiringSoon[0]` → HeroGameCard（大判ヒーロー表示）
+  - 残りのゲームすべて → 2列SliverGrid
+  - `_OfferTile.toHeroGameOffer()` 追加・aiRecommendation転送
+- `lib/core/widgets/category_chip.dart` — `small` オプション追加
+
 ## [0.2.7] - 2026-05-16
 
 ### Added
