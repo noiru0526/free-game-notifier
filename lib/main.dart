@@ -404,34 +404,139 @@ class _OfferTile extends StatelessWidget {
   }
 }
 
-class _SearchView extends StatelessWidget {
+class _SearchView extends StatefulWidget {
   const _SearchView();
 
   @override
+  State<_SearchView> createState() => _SearchViewState();
+}
+
+class _SearchViewState extends State<_SearchView> {
+  final _controller = TextEditingController();
+  final _repo = MockGameOfferRepository();
+  List<data.GameOffer> _allOffers = [];
+  List<data.GameOffer> _results = [];
+  final Set<String> _selectedGenres = {};
+  bool _loaded = false;
+
+  static const _genres = [
+    'Action', 'RPG', 'Indie', 'Shooter', 'Strategy', 'Adventure', 'Horror',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _repo.fetchFreeGames().then((offers) {
+      if (mounted) setState(() { _allOffers = offers; _loaded = true; _filter(); });
+    });
+    _controller.addListener(_filter);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _filter() {
+    final q = _controller.text.toLowerCase();
+    setState(() {
+      _results = _allOffers.where((o) {
+        final matchQ = q.isEmpty ||
+            o.title.toLowerCase().contains(q) ||
+            o.description.toLowerCase().contains(q);
+        final matchG = _selectedGenres.isEmpty ||
+            o.genres.any((g) => _selectedGenres
+                .any((sg) => g.toLowerCase().contains(sg.toLowerCase())));
+        return matchQ && matchG;
+      }).toList();
+    });
+  }
+
+  void _toggleGenre(String genre) {
+    setState(() {
+      if (_selectedGenres.contains(genre)) _selectedGenres.remove(genre);
+      else _selectedGenres.add(genre);
+    });
+    _filter();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        children: [
-          TextField(
-            decoration: const InputDecoration(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+          child: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
               hintText: 'ゲームを検索...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _controller.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _controller.clear();
+                        _filter();
+                      },
+                    )
+                  : null,
             ),
             autofocus: false,
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Text('ジャンルで絞り込む', style: AppTypography.h4),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: ['Action', 'RPG', 'Indie', 'Shooter', 'Strategy', 'Adventure', 'Horror']
-                .map((g) => CategoryChip(label: g, onTap: () {}))
-                .toList(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding:
+                const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            itemCount: _genres.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+            itemBuilder: (_, i) => CategoryChip(
+              label: _genres[i],
+              selected: _selectedGenres.contains(_genres[i]),
+              onTap: () => _toggleGenre(_genres[i]),
+            ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (!_loaded)
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.interactivePrimary),
+            ),
+          )
+        else if (_results.isEmpty)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '「${_controller.text}」の検索結果はありません',
+                    style:
+                        AppTypography.body.copyWith(color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+              itemCount: _results.length,
+              itemBuilder: (ctx, i) =>
+                  _OfferTile(offer: _results[i]),
+            ),
+          ),
+      ],
     );
   }
 }

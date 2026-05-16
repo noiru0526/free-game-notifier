@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-16
+
+### Changed
+- `lib/main.dart` — `_SearchView` を StatefulWidget にリファクタリング (@noiru0526)
+  - テキスト検索（タイトル・説明文をリアルタイムフィルタリング）
+  - ジャンルチップによる複数選択フィルタリング
+  - 検索結果に _OfferTile（GameCard）を表示
+  - 結果0件時の空状態UI（search_offアイコン）
+  - TextEditingControllerで入力クリアボタン付き
+
 ## [0.1.4] - 2026-05-16
 
 ### Changed
