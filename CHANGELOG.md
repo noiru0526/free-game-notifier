@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-16
+
+### Changed
+- `lib/main.dart` — `_SettingsView` を StatefulWidget にリファクタリング (@noiru0526)
+  - 通知スイッチ（プッシュ/終了間近/AIおすすめ）が実際に動作するよう修正
+  - 割引率しきい値スライダー（10〜90%）追加
+  - プラットフォーム選択（Epic/Steam/GOG/EA/itch.io）が独立して制御可能に
+  - 好みのジャンル選択（CategoryChipタップでトグル）
+  - `_SectionHeader` コンポーネント追加（アイコン付きセクション見出し）
+
 ## [0.1.3] - 2026-05-16
 
 ### Added

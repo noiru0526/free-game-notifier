@@ -436,35 +436,176 @@ class _SearchView extends StatelessWidget {
   }
 }
 
-class _SettingsView extends StatelessWidget {
+class _SettingsView extends StatefulWidget {
   const _SettingsView();
+
+  @override
+  State<_SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<_SettingsView> {
+  bool _pushNotif = true;
+  bool _expiringNotif = true;
+  bool _recoNotif = false;
+  double _discountThreshold = 50;
+  final Map<String, bool> _platforms = {
+    'Epic Games': true,
+    'Steam': true,
+    'GOG': false,
+    'EA App': false,
+    'itch.io': false,
+  };
+  final Map<String, bool> _genres = {
+    'Action': true,
+    'RPG': true,
+    'Indie': false,
+    'Shooter': false,
+    'Strategy': false,
+    'Adventure': true,
+    'Horror': false,
+  };
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        Text('通知設定', style: AppTypography.h4),
-        const SizedBox(height: AppSpacing.md),
+        // Notification section
+        _SectionHeader(title: '通知設定', icon: Icons.notifications_outlined),
+        const SizedBox(height: AppSpacing.sm),
         _SettingsTile(
           title: 'プッシュ通知',
           subtitle: '新しい無料ゲームが追加されたときに通知',
-          trailing: Switch(value: true, onChanged: (_) {}),
+          trailing: Switch(
+            value: _pushNotif,
+            onChanged: (v) => setState(() => _pushNotif = v),
+          ),
         ),
         _SettingsTile(
           title: '終了間近の通知',
           subtitle: '無料期間が24時間以内に終了するゲームを通知',
-          trailing: Switch(value: true, onChanged: (_) {}),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        Text('プラットフォーム', style: AppTypography.h4),
-        const SizedBox(height: AppSpacing.md),
-        ...['Epic Games', 'Steam', 'GOG', 'EA App', 'itch.io'].map(
-          (p) => _SettingsTile(
-            title: p,
-            trailing: Switch(value: true, onChanged: (_) {}),
+          trailing: Switch(
+            value: _expiringNotif,
+            onChanged: (v) => setState(() => _expiringNotif = v),
           ),
         ),
+        _SettingsTile(
+          title: 'AI おすすめ通知',
+          subtitle: 'あなたの好みに合ったゲームをClaude AIが推薦',
+          trailing: Switch(
+            value: _recoNotif,
+            onChanged: (v) => setState(() => _recoNotif = v),
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+        _SectionHeader(title: '割引通知', icon: Icons.local_offer_outlined),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+            border: Border.all(color: AppColors.borderMuted),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('割引率しきい値', style: AppTypography.body),
+                  const Spacer(),
+                  Text(
+                    '${_discountThreshold.round()}% 以上',
+                    style: AppTypography.label
+                        .copyWith(color: AppColors.interactivePrimary),
+                  ),
+                ],
+              ),
+              Slider(
+                value: _discountThreshold,
+                min: 10,
+                max: 90,
+                divisions: 8,
+                activeColor: AppColors.interactivePrimary,
+                onChanged: (v) => setState(() => _discountThreshold = v),
+              ),
+              Text(
+                '${_discountThreshold.round()}% 以上の割引時に通知します',
+                style: AppTypography.caption,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+        _SectionHeader(title: 'プラットフォーム', icon: Icons.store_outlined),
+        const SizedBox(height: AppSpacing.sm),
+        ..._platforms.entries.map(
+          (e) => _SettingsTile(
+            title: e.key,
+            trailing: Switch(
+              value: e.value,
+              onChanged: (v) => setState(() => _platforms[e.key] = v),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+        _SectionHeader(title: '好みのジャンル', icon: Icons.gamepad_outlined),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+            border: Border.all(color: AppColors.borderMuted),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '選択したジャンルのゲームを優先的に通知します',
+                style: AppTypography.caption,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: _genres.entries
+                    .map((e) => GestureDetector(
+                          onTap: () =>
+                              setState(() => _genres[e.key] = !e.value),
+                          child: CategoryChip(
+                            label: e.key,
+                            selected: e.value,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.xl4),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  const _SectionHeader({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.interactivePrimary),
+        const SizedBox(width: AppSpacing.xs),
+        Text(title, style: AppTypography.h4),
       ],
     );
   }
