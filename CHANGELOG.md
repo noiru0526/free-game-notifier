@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-16
+
+### Added
+- `lib/data/game_offer.dart` — GameOfferデータモデル（Firestoreスキーマ準拠） (@noiru0526)
+  - `fromJson()`, `isFree`, `isUpcoming`, `timeRemaining`, `storeUrl` ゲッター
+- `lib/data/game_offer_repository.dart` — データ取得リポジトリ (@noiru0526)
+  - `GameOfferRepository`: Cloud Functions HTTP `getFreeGames` / `fetchEpicNow` を呼び出す
+  - `MockGameOfferRepository`: ローカル開発用のモックデータ（Death Stranding等3本）
+- `pubspec.yaml` — 依存パッケージ追加: http / intl / shared_preferences / url_launcher
+- `lib/main.dart` — `_GameListView` を StatefulWidget に刷新 (@noiru0526)
+  - `FutureBuilder` + `MockGameOfferRepository` でデータを非同期取得・表示
+  - `RefreshIndicator` でプルトゥリフレッシュ対応
+  - カテゴリフィルター（すべて/Action/RPG等）が動作するよう修正
+  - 「まもなく終了」「近日無料予定」セクションの動的分類
+  - クレームダイアログに残り時間表示を追加
+
+### Changed
+- `lib/core/widgets/category_chip.dart` — `CategoryChipRow` に `onTap` シングルセレクト対応追加
+
 ## [0.1.1] - 2026-05-16
 
 ### Added

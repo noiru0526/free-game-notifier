@@ -76,12 +76,15 @@ class CategoryChipRow extends StatefulWidget {
   final List<String> categories;
   final List<String> selected;
   final ValueChanged<List<String>>? onChanged;
+  /// Single-select shorthand: called when a chip is tapped with its label
+  final ValueChanged<String>? onTap;
 
   const CategoryChipRow({
     super.key,
     required this.categories,
     this.selected = const [],
     this.onChanged,
+    this.onTap,
   });
 
   @override
@@ -89,7 +92,7 @@ class CategoryChipRow extends StatefulWidget {
 }
 
 class _CategoryChipRowState extends State<CategoryChipRow> {
-  late final Set<String> _selected;
+  late Set<String> _selected;
 
   @override
   void initState() {
@@ -97,7 +100,20 @@ class _CategoryChipRowState extends State<CategoryChipRow> {
     _selected = Set.of(widget.selected);
   }
 
+  @override
+  void didUpdateWidget(CategoryChipRow old) {
+    super.didUpdateWidget(old);
+    if (old.selected != widget.selected) {
+      _selected = Set.of(widget.selected);
+    }
+  }
+
   void _toggle(String cat) {
+    if (widget.onTap != null) {
+      setState(() => _selected = {cat});
+      widget.onTap!.call(cat);
+      return;
+    }
     setState(() {
       if (_selected.contains(cat)) _selected.remove(cat);
       else _selected.add(cat);

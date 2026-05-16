@@ -6,6 +6,8 @@ import 'core/theme/app_typography.dart';
 import 'core/widgets/category_chip.dart';
 import 'core/widgets/game_card.dart';
 import 'core/widgets/notification_badge.dart';
+import 'data/game_offer.dart' as data;
+import 'data/game_offer_repository.dart';
 
 void main() {
   runApp(const FreeGameNotifierApp());
@@ -26,49 +28,6 @@ class FreeGameNotifierApp extends StatelessWidget {
     );
   }
 }
-
-// ===== Sample data =====
-final _sampleOffers = [
-  GameOffer(
-    id: '1',
-    title: 'Cyberpunk 2077',
-    description: '大人気オープンワールドRPG。ナイトシティを舞台に繰り広げる壮大な物語。',
-    status: GameStatus.expiringSoon,
-    platform: Platform.epic,
-    genres: ['RPG', 'Action', 'Indie'],
-    expiresAt: DateTime.now().add(const Duration(hours: 23, minutes: 42)),
-    originalPrice: 7480,
-    isNew: true,
-  ),
-  GameOffer(
-    id: '2',
-    title: 'Hollow Knight',
-    description: 'チャレンジングなアクション・アドベンチャーゲーム。地下帝国を探索しよう。',
-    status: GameStatus.free,
-    platform: Platform.gog,
-    genres: ['Indie', 'Adventure', 'Action'],
-    expiresAt: DateTime.now().add(const Duration(days: 5)),
-    originalPrice: 1480,
-  ),
-  GameOffer(
-    id: '3',
-    title: 'Stardew Valley',
-    description: '農場経営シミュレーション。癒しの農村生活を楽しもう。',
-    status: GameStatus.claimed,
-    platform: Platform.steam,
-    genres: ['Indie', 'RPG', 'Strategy'],
-    originalPrice: 980,
-  ),
-  GameOffer(
-    id: '4',
-    title: 'Death Stranding',
-    description: '小島秀夫監督の最新作。荒廃したアメリカを繋ぎ直すアクションゲーム。',
-    status: GameStatus.expired,
-    platform: Platform.epic,
-    genres: ['Action', 'Adventure'],
-    originalPrice: 5980,
-  ),
-];
 
 // ===== Screens =====
 
@@ -141,104 +100,188 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _GameListView extends StatelessWidget {
+class _GameListView extends StatefulWidget {
   const _GameListView();
 
   @override
-  Widget build(BuildContext context) {
-    const categories = ['すべて', 'Action', 'RPG', 'Indie', 'Strategy', 'Adventure'];
+  State<_GameListView> createState() => _GameListViewState();
+}
 
-    return CustomScrollView(
-      slivers: [
-        // Category filter chips
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            child: CategoryChipRow(
-              categories: categories,
-              selected: const ['すべて'],
-            ),
-          ),
-        ),
-        // Section header — Expiring soon
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
-            child: Row(
+class _GameListViewState extends State<_GameListView> {
+  final _repo = MockGameOfferRepository();
+  late Future<List<data.GameOffer>> _offersFuture;
+  String _selectedCategory = 'すべて';
+
+  static const _categories = [
+    'すべて', 'Action', 'RPG', 'Indie', 'Strategy', 'Adventure', 'Shooter',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _offersFuture = _repo.fetchFreeGames();
+  }
+
+  void _refresh() {
+    setState(() {
+      _offersFuture = _repo.fetchFreeGames();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<data.GameOffer>>(
+      future: _offersFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.interactivePrimary),
+          );
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                PulsingDot(color: AppColors.feedbackExpiring),
-                const SizedBox(width: AppSpacing.sm),
-                Text('まもなく終了', style: AppTypography.h4.copyWith(color: AppColors.feedbackExpiring)),
+                Icon(Icons.error_outline, size: 48, color: AppColors.feedbackExpired),
+                const SizedBox(height: AppSpacing.md),
+                Text('データの取得に失敗しました', style: AppTypography.body),
+                const SizedBox(height: AppSpacing.sm),
+                ElevatedButton(onPressed: _refresh, child: const Text('再試行')),
               ],
             ),
-          ),
-        ),
-        // Expiring offers
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (_, i) {
-              final offer = _sampleOffers
-                  .where((o) => o.status == GameStatus.expiringSoon)
-                  .toList()[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-                child: GameCard(
-                  offer: offer,
-                  onTap: () {},
-                  onClaim: () => _showClaimDialog(context, offer),
+          );
+        }
+
+        final allOffers = snapshot.data ?? [];
+        final filtered = _selectedCategory == 'すべて'
+            ? allOffers
+            : allOffers
+                .where((o) => o.genres.any(
+                    (g) => g.toLowerCase() == _selectedCategory.toLowerCase()))
+                .toList();
+
+        final expiringSoon = filtered
+            .where((o) => o.isFree && _isExpiringSoon(o))
+            .toList();
+        final freeNow = filtered
+            .where((o) => o.isFree && !_isExpiringSoon(o))
+            .toList();
+        final upcoming = filtered.where((o) => o.isUpcoming).toList();
+
+        return RefreshIndicator(
+          onRefresh: () async => _refresh(),
+          color: AppColors.interactivePrimary,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: CategoryChipRow(
+                    categories: _categories,
+                    selected: [_selectedCategory],
+                    onTap: (cat) => setState(() => _selectedCategory = cat),
+                  ),
                 ),
-              );
-            },
-            childCount: _sampleOffers
-                .where((o) => o.status == GameStatus.expiringSoon)
-                .length,
-          ),
-        ),
-        // Section header — Free now
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
-            child: Text('無料で入手できるゲーム', style: AppTypography.h4),
-          ),
-        ),
-        // All offers
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (_, i) {
-              final offer = _sampleOffers
-                  .where((o) => o.status != GameStatus.expiringSoon)
-                  .toList()[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-                child: GameCard(
-                  offer: offer,
-                  onTap: () {},
-                  onClaim: offer.status == GameStatus.free
-                      ? () => _showClaimDialog(context, offer)
-                      : null,
+              ),
+              if (expiringSoon.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        PulsingDot(color: AppColors.feedbackExpiring),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text('まもなく終了',
+                            style: AppTypography.h4
+                                .copyWith(color: AppColors.feedbackExpiring)),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            },
-            childCount: _sampleOffers
-                .where((o) => o.status != GameStatus.expiringSoon)
-                .length,
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _OfferTile(
+                      offer: expiringSoon[i],
+                      onClaim: () => _showClaimDialog(context, expiringSoon[i]),
+                    ),
+                    childCount: expiringSoon.length,
+                  ),
+                ),
+              ],
+              if (freeNow.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
+                    child: Text('無料で入手できるゲーム', style: AppTypography.h4),
+                  ),
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _OfferTile(
+                      offer: freeNow[i],
+                      onClaim: () => _showClaimDialog(context, freeNow[i]),
+                    ),
+                    childCount: freeNow.length,
+                  ),
+                ),
+              ],
+              if (upcoming.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule, size: 14, color: AppColors.textMuted),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text('近日無料予定',
+                            style: AppTypography.h4.copyWith(color: AppColors.textMuted)),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _OfferTile(offer: upcoming[i]),
+                    childCount: upcoming.length,
+                  ),
+                ),
+              ],
+              if (filtered.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl4),
+                    child: Center(
+                      child: Text(
+                        '$_selectedCategory のゲームは現在ありません',
+                        style: AppTypography.body.copyWith(color: AppColors.textMuted),
+                      ),
+                    ),
+                  ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl4)),
+            ],
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl4)),
-      ],
+        );
+      },
     );
   }
 
-  void _showClaimDialog(BuildContext context, GameOffer offer) {
+  bool _isExpiringSoon(data.GameOffer offer) {
+    final rem = offer.timeRemaining;
+    return rem != null && rem.inHours < 48;
+  }
+
+  void _showClaimDialog(BuildContext context, data.GameOffer offer) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.bgElevated,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.modalRadius)),
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.modalRadius)),
       ),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(AppSpacing.paddingComfortable),
@@ -248,6 +291,20 @@ class _GameListView extends StatelessWidget {
           children: [
             Text(offer.title, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
+            if (offer.timeRemaining != null) ...[
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 14, color: AppColors.feedbackExpiring),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '残り ${_formatDuration(offer.timeRemaining!)}',
+                    style: AppTypography.labelSmall
+                        .copyWith(color: AppColors.feedbackExpiring),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
             Text('このゲームを無料で入手しますか？', style: AppTypography.body),
             const SizedBox(height: AppSpacing.xl),
             Row(
@@ -277,6 +334,63 @@ class _GameListView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inDays > 0) return '${d.inDays}日';
+    if (d.inHours > 0) return '${d.inHours}時間${d.inMinutes % 60}分';
+    return '${d.inMinutes}分';
+  }
+}
+
+class _OfferTile extends StatelessWidget {
+  final data.GameOffer offer;
+  final VoidCallback? onClaim;
+
+  const _OfferTile({required this.offer, this.onClaim});
+
+  @override
+  Widget build(BuildContext context) {
+    final gameOffer = GameOffer(
+      id: offer.id,
+      title: offer.title,
+      description: offer.description,
+      thumbnailUrl: offer.thumbnailUrl,
+      status: _mapStatus(offer.status),
+      platform: _mapPlatform(offer.platform),
+      genres: offer.genres,
+      expiresAt: offer.offerEnd,
+      originalPrice: offer.originalPrice,
+      isNew: offer.isFree && offer.timeRemaining != null &&
+          offer.timeRemaining!.inHours < 24,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      child: GameCard(offer: gameOffer, onTap: () {}, onClaim: onClaim),
+    );
+  }
+
+  GameStatus _mapStatus(String s) {
+    switch (s) {
+      case 'free':
+        return GameStatus.free;
+      case 'upcoming':
+        return GameStatus.expired;
+      default:
+        return GameStatus.expired;
+    }
+  }
+
+  Platform _mapPlatform(String p) {
+    switch (p) {
+      case 'steam':
+        return Platform.steam;
+      case 'gog':
+        return Platform.gog;
+      default:
+        return Platform.epic;
+    }
   }
 }
 
