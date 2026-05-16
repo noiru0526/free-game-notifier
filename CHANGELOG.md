@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-16
+
+### Changed
+- `lib/data/game_offer.dart` — マルチプラットフォーム対応 (@noiru0526)
+  - `storeUrl` にSteam / GOG / EA App / itch.ioのURLパターンを追加
+  - `platformDisplayName` ゲッターを追加
+- `lib/screens/game_detail_screen.dart` — `_PlatformBadge` に EA App / itch.io バッジを追加
+  - デフォルトは `platform.toUpperCase()` で表示
+
 ## [0.2.2] - 2026-05-16
 
 ### Added

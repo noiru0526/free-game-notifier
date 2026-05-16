@@ -65,12 +65,30 @@ class GameOffer {
   }
 
   String get storeUrl {
-    if (platform == 'epic') {
-      if (pageSlug != null) {
-        return 'https://store.epicgames.com/ja/p/$pageSlug';
-      }
-      return 'https://store.epicgames.com/ja/free-games';
+    switch (platform) {
+      case 'epic':
+        if (pageSlug != null) return 'https://store.epicgames.com/ja/p/$pageSlug';
+        return 'https://store.epicgames.com/ja/free-games';
+      case 'steam':
+        if (pageSlug != null) return 'https://store.steampowered.com/app/$pageSlug';
+        return 'https://store.steampowered.com/genre/Free%20to%20Play/';
+      case 'gog':
+        if (pageSlug != null) return 'https://www.gog.com/game/$pageSlug';
+        return 'https://www.gog.com/games?price=free';
+      case 'ea':
+        return 'https://www.ea.com/games/free-games';
+      default:
+        return 'https://itch.io/games/free';
     }
-    return 'https://store.steampowered.com';
+  }
+
+  String get platformDisplayName {
+    switch (platform) {
+      case 'epic': return 'Epic Games';
+      case 'steam': return 'Steam';
+      case 'gog': return 'GOG';
+      case 'ea': return 'EA App';
+      default: return platform.toUpperCase();
+    }
   }
 }

@@ -345,7 +345,9 @@ class _PlatformBadge extends StatelessWidget {
       'epic' => ('EPIC GAMES', AppColors.interactivePrimary),
       'steam' => ('STEAM', AppColors.interactiveAccent),
       'gog' => ('GOG', AppColors.platformGOG),
-      _ => ('OTHER', AppColors.textMuted),
+      'ea' => ('EA APP', const Color(0xFFFF6B00)),
+      'itch' => ('ITCH.IO', const Color(0xFFFA5C5C)),
+      _ => (platform.toUpperCase(), AppColors.textMuted),
     };
     return Container(
       padding: const EdgeInsets.symmetric(
