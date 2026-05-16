@@ -13,6 +13,8 @@ class GameOffer {
   final String? aiRecommendation;
   final int? metacritic;
   final double? rating;
+  final double? discountPercentage;
+  final double? discountedPrice;
 
   const GameOffer({
     required this.id,
@@ -29,6 +31,8 @@ class GameOffer {
     this.aiRecommendation,
     this.metacritic,
     this.rating,
+    this.discountPercentage,
+    this.discountedPrice,
   });
 
   factory GameOffer.fromJson(Map<String, dynamic> json) {
@@ -52,10 +56,13 @@ class GameOffer {
       aiRecommendation: json['aiRecommendation'] as String?,
       metacritic: json['metacritic'] as int?,
       rating: (json['rating'] as num?)?.toDouble(),
+      discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
+      discountedPrice: (json['discountedPrice'] as num?)?.toDouble(),
     );
   }
 
   bool get isFree => status == 'free';
+  bool get isDiscounted => (discountPercentage ?? 0) > 0 && !isFree;
   bool get isUpcoming => status == 'upcoming';
 
   Duration? get timeRemaining {

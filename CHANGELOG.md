@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-05-16
+
+### Added
+- `lib/data/game_offer.dart` — 割引フィールド追加 (@noiru0526)
+  - `discountPercentage`, `discountedPrice` フィールド
+  - `isDiscounted` ゲッター
+- `lib/core/widgets/game_card.dart` — 割引バッジ表示 (@noiru0526)
+  - `discountPercentage`, `discountedPrice` フィールド追加
+  - 割引率バッジ（オレンジ色、-XX%表示）をカード右上に表示
+
 ## [0.2.5] - 2026-05-16
 
 ### Changed

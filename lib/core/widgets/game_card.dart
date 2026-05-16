@@ -18,6 +18,8 @@ class GameOffer {
   final List<String> genres;
   final DateTime? expiresAt;
   final double? originalPrice;
+  final double? discountedPrice;
+  final double? discountPercentage;
   final bool isNew;
 
   const GameOffer({
@@ -30,8 +32,12 @@ class GameOffer {
     this.genres = const [],
     this.expiresAt,
     this.originalPrice,
+    this.discountedPrice,
+    this.discountPercentage,
     this.isNew = false,
   });
+
+  bool get isDiscounted => (discountPercentage ?? 0) > 0 && status != GameStatus.free;
 }
 
 class GameCard extends StatelessWidget {
@@ -80,6 +86,27 @@ class GameCard extends StatelessWidget {
                 top: AppSpacing.sm,
                 right: AppSpacing.sm,
                 child: NotificationBadge(label: 'NEW', color: AppColors.feedbackNew),
+              ),
+            if (offer.isDiscounted && !offer.isNew)
+              Positioned(
+                top: AppSpacing.sm,
+                right: AppSpacing.sm,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B00),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '-${offer.discountPercentage!.round()}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
               ),
             if (offer.status == GameStatus.claimed)
               Positioned.fill(
