@@ -140,6 +140,7 @@ class _GameListViewState extends State<_GameListView> {
   final _repo = MockGameOfferRepository();
   late Future<List<data.GameOffer>> _offersFuture;
   String _selectedCategory = 'すべて';
+  Set<String> _claimedIds = {};
 
   static const _categories = [
     'すべて', 'Action', 'RPG', 'Indie', 'Strategy', 'Adventure', 'Shooter',
@@ -149,12 +150,38 @@ class _GameListViewState extends State<_GameListView> {
   void initState() {
     super.initState();
     _offersFuture = _repo.fetchFreeGames();
+    _loadClaimedIds();
+  }
+
+  Future<void> _loadClaimedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList('claimed_game_ids') ?? [];
+    if (mounted) setState(() => _claimedIds = ids.toSet());
+  }
+
+  Future<void> _claimGame(String gameId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList('claimed_game_ids') ?? [];
+    if (!ids.contains(gameId)) {
+      ids.add(gameId);
+      await prefs.setStringList('claimed_game_ids', ids);
+    }
+    if (mounted) setState(() => _claimedIds = ids.toSet());
+  }
+
+  Future<void> _unclaimGame(String gameId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList('claimed_game_ids') ?? [];
+    ids.remove(gameId);
+    await prefs.setStringList('claimed_game_ids', ids);
+    if (mounted) setState(() => _claimedIds = ids.toSet());
   }
 
   void _refresh() {
     setState(() {
       _offersFuture = _repo.fetchFreeGames();
     });
+    _loadClaimedIds();
   }
 
   @override
@@ -190,13 +217,17 @@ class _GameListViewState extends State<_GameListView> {
                     (g) => g.toLowerCase() == _selectedCategory.toLowerCase()))
                 .toList();
 
-        final expiringSoon = filtered
-            .where((o) => o.isFree && _isExpiringSoon(o))
+        final freeOffers = filtered.where((o) => o.isFree).toList();
+        final expiringSoon = freeOffers
+            .where((o) => _isExpiringSoon(o) && !_claimedIds.contains(o.id))
             .toList();
-        final freeNow = filtered
-            .where((o) => o.isFree && !_isExpiringSoon(o))
+        final freeNow = freeOffers
+            .where((o) => !_isExpiringSoon(o) && !_claimedIds.contains(o.id))
             .toList();
         final upcoming = filtered.where((o) => o.isUpcoming).toList();
+        final claimedGames = freeOffers
+            .where((o) => _claimedIds.contains(o.id))
+            .toList();
 
         return RefreshIndicator(
           onRefresh: () async => _refresh(),
@@ -234,6 +265,7 @@ class _GameListViewState extends State<_GameListView> {
                     (_, i) => _OfferTile(
                       offer: expiringSoon[i],
                       onClaim: () => _showClaimDialog(context, expiringSoon[i]),
+                      claimed: false,
                     ),
                     childCount: expiringSoon.length,
                   ),
@@ -252,6 +284,7 @@ class _GameListViewState extends State<_GameListView> {
                     (_, i) => _OfferTile(
                       offer: freeNow[i],
                       onClaim: () => _showClaimDialog(context, freeNow[i]),
+                      claimed: false,
                     ),
                     childCount: freeNow.length,
                   ),
@@ -279,7 +312,42 @@ class _GameListViewState extends State<_GameListView> {
                   ),
                 ),
               ],
-              if (filtered.isEmpty)
+              if (claimedGames.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline,
+                            size: 14, color: AppColors.textMuted),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text('取得済み',
+                            style: AppTypography.h4
+                                .copyWith(color: AppColors.textMuted)),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () async {
+                            for (final g in claimedGames) {
+                              await _unclaimGame(g.id);
+                            }
+                          },
+                          child: Text('クリア',
+                              style: AppTypography.labelSmall
+                                  .copyWith(color: AppColors.textMuted)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _OfferTile(offer: claimedGames[i], claimed: true),
+                    childCount: claimedGames.length,
+                  ),
+                ),
+              ],
+              if (freeOffers.isEmpty && upcoming.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.xl4),
@@ -349,8 +417,15 @@ class _GameListViewState extends State<_GameListView> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
+                      _claimGame(offer.id);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${offer.title} を取得しました！')),
+                        SnackBar(
+                          content: Text('${offer.title} を取得しました！'),
+                          action: SnackBarAction(
+                            label: 'ストアを開く',
+                            onPressed: () {},
+                          ),
+                        ),
                       );
                     },
                     child: const Text('無料で入手'),
@@ -375,8 +450,9 @@ class _GameListViewState extends State<_GameListView> {
 class _OfferTile extends StatelessWidget {
   final data.GameOffer offer;
   final VoidCallback? onClaim;
+  final bool claimed;
 
-  const _OfferTile({required this.offer, this.onClaim});
+  const _OfferTile({required this.offer, this.onClaim, this.claimed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -385,12 +461,20 @@ class _OfferTile extends StatelessWidget {
       title: offer.title,
       description: offer.description,
       thumbnailUrl: offer.thumbnailUrl,
-      status: _mapStatus(offer.status),
+      status: claimed
+          ? GameStatus.claimed
+          : (offer.isFree &&
+                  offer.timeRemaining != null &&
+                  offer.timeRemaining!.inHours < 48
+              ? GameStatus.expiringSoon
+              : _mapStatus(offer.status)),
       platform: _mapPlatform(offer.platform),
       genres: offer.genres,
       expiresAt: offer.offerEnd,
       originalPrice: offer.originalPrice,
-      isNew: offer.isFree && offer.timeRemaining != null &&
+      discountPercentage: offer.discountPercentage,
+      discountedPrice: offer.discountedPrice,
+      isNew: !claimed && offer.isFree && offer.timeRemaining != null &&
           offer.timeRemaining!.inHours < 24,
     );
     return Padding(

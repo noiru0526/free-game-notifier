@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-05-16
+
+### Added
+- `lib/main.dart` — クレーム済みゲーム永続化機能 (@noiru0526)
+  - `_claimedIds: Set<String>` でアプリ内クレーム状態を管理
+  - `_loadClaimedIds()` — SharedPreferences(`claimed_game_ids`)から起動時に復元
+  - `_claimGame(id)` — クレーム時にIDを保存 → GameCardに`GameStatus.claimed`を反映
+  - `_unclaimGame(id)` — 取得済みセクションの「クリア」ボタンで削除
+  - 「取得済み」セクションをゲームリスト下部に自動表示（クレームしたゲームのみ）
+  - SnackBarに「ストアを開く」アクションボタンを追加
+  - `_mapStatus` を拡張 — 48時間以内のゲームに`GameStatus.expiringSoon`を自動適用
+  - `_OfferTile` に `claimed` フラグ追加、`discountPercentage`/`discountedPrice`も転送
+
 ## [0.2.6] - 2026-05-16
 
 ### Added
