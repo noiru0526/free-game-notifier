@@ -5,6 +5,7 @@ const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const https = require("https");
 const { enrichGameWithRAWG } = require("./rawg");
+const { generateRecommendation } = require("./claude_recommend");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -90,8 +91,11 @@ exports.fetchEpicFreeGames = onSchedule(
   { schedule: "0 9 * * 4", timeZone: "UTC", region: "asia-northeast1" },
   async () => {
     logger.info("Fetching Epic Games free promotions...");
-    // RAWG API key: set via Firebase Secret or environment variable
+    // API keys: set via Firebase Secrets or environment variables
     const rawgKey = process.env.RAWG_API_KEY ?? null;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY ?? null;
+    // Default user genre preferences (overridable via Firestore config)
+    const defaultGenres = ["Action", "RPG", "Indie", "Adventure"];
 
     try {
       const json = await fetchJSON(EPIC_API_URL);
@@ -107,6 +111,22 @@ exports.fetchEpicFreeGames = onSchedule(
           if (rawgData) logger.info(`RAWG enriched: ${offer.title}`);
         }
 
+        // Generate Claude recommendation for free games
+        let recommendation = null;
+        if (anthropicKey && offer.status === "free") {
+          try {
+            recommendation = await generateRecommendation(
+              { ...offer, metacritic: rawgData?.metacritic },
+              defaultGenres,
+              anthropicKey,
+              "ja"
+            );
+            if (recommendation) logger.info(`Claude rec generated: ${offer.title}`);
+          } catch (recErr) {
+            logger.warn(`Claude recommendation failed for ${offer.title}`, recErr.message);
+          }
+        }
+
         const ref = db.collection("gameOffers").doc(`epic_${offer.id}`);
         batch.set(ref, {
           ...offer,
@@ -119,6 +139,7 @@ exports.fetchEpicFreeGames = onSchedule(
             released: rawgData.released,
             playtime: rawgData.playtime,
           } : {}),
+          ...(recommendation ? { aiRecommendation: recommendation } : {}),
         }, { merge: true });
       }
       await batch.commit();

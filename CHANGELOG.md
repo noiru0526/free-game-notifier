@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-16
+
+### Added
+- `functions/claude_recommend.js` — Claude API おすすめ理由生成 (@noiru0526)
+  - `generateRecommendation()`: claude-haiku-4-5を使ってゲームの1〜2文推薦文を日本語で生成
+  - ユーザーの好みジャンルに合致した場合その旨を含める
+  - Metacriticスコアも考慮
+  - `process.env.ANTHROPIC_API_KEY` でFirebase Secretから取得
+
+### Changed
+- `functions/index.js` — Claude APIをスケジュール関数に統合
+  - 無料ゲームに対してRAWG + Claude両方を実行
+  - `aiRecommendation` フィールドとしてFirestoreに保存
+  - ANTHROPIC_API_KEY不在でgraceful degradation
+
 ## [0.1.6] - 2026-05-16
 
 ### Added
