@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_typography.dart';
@@ -256,11 +257,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
-  void _openStore(BuildContext context) {
-    // url_launcher を使う場合: launchUrl(Uri.parse(offer.storeUrl));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('ストアを開きます: ${widget.offer.storeUrl}')),
-    );
+  Future<void> _openStore(BuildContext context) async {
+    final uri = Uri.parse(widget.offer.storeUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ストアを開けませんでした: ${widget.offer.storeUrl}')),
+      );
+    }
   }
 }
 

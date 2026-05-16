@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-16
+
+### Changed
+- `lib/screens/game_detail_screen.dart` — url_launcher でストアを実際に開く (@noiru0526)
+  - `_openStore()` を `launchUrl()` に変更（外部ブラウザで開く）
+  - 起動失敗時はSnackBarでエラー表示
+
 ## [0.2.3] - 2026-05-16
 
 ### Changed
