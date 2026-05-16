@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-05-16
+
+### Added
+- `functions/index.js` — FCM通知完全統合 (@noiru0526)
+  - 新規無料ゲーム検出時に `sendFreeGameNotification()` を自動呼び出し
+  - `fcmNotifiedAt` フィールドで重複通知を防止（既通知はスキップ）
+  - `sendExpiryWarnings` — 毎日09:00 UTCに24時間以内に期限切れのゲームを検出してFCM送信
+  - `expiryWarningSentAt` フィールドで重複警告を防止
+  - `recommendations` Mapでバッチ内のAI推薦文を追跡→FCM本文に活用
+
 ## [0.1.8] - 2026-05-16
 
 ### Added

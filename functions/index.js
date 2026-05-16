@@ -6,6 +6,7 @@ const admin = require("firebase-admin");
 const https = require("https");
 const { enrichGameWithRAWG } = require("./rawg");
 const { generateRecommendation } = require("./claude_recommend");
+const { sendFreeGameNotification } = require("./fcm_notify");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -103,6 +104,7 @@ exports.fetchEpicFreeGames = onSchedule(
       logger.info(`Found ${offers.length} Epic offers`);
 
       const batch = db.batch();
+      const recommendations = new Map();
       for (const offer of offers) {
         // Enrich with RAWG metadata if API key is available
         let rawgData = null;
@@ -121,7 +123,10 @@ exports.fetchEpicFreeGames = onSchedule(
               anthropicKey,
               "ja"
             );
-            if (recommendation) logger.info(`Claude rec generated: ${offer.title}`);
+            if (recommendation) {
+              logger.info(`Claude rec generated: ${offer.title}`);
+              recommendations.set(offer.id, recommendation);
+            }
           } catch (recErr) {
             logger.warn(`Claude recommendation failed for ${offer.title}`, recErr.message);
           }
@@ -144,6 +149,29 @@ exports.fetchEpicFreeGames = onSchedule(
       }
       await batch.commit();
       logger.info("Epic offers saved to Firestore");
+
+      // Send FCM notifications for newly detected free games (skip already-notified)
+      const freeOffers = offers.filter((o) => o.status === "free");
+      for (const offer of freeOffers) {
+        try {
+          const docSnap = await db.collection("gameOffers").doc(`epic_${offer.id}`).get();
+          if (docSnap.exists && docSnap.data()?.fcmNotifiedAt) {
+            logger.info(`FCM already sent for ${offer.title}, skipping`);
+            continue;
+          }
+          const enriched = {
+            ...offer,
+            aiRecommendation: recommendations.get(offer.id) ?? null,
+          };
+          await sendFreeGameNotification(enriched);
+          await db.collection("gameOffers").doc(`epic_${offer.id}`).update({
+            fcmNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          logger.info(`FCM notification sent for ${offer.title}`);
+        } catch (fcmErr) {
+          logger.warn(`FCM failed for ${offer.title}:`, fcmErr.message);
+        }
+      }
     } catch (err) {
       logger.error("fetchEpicFreeGames error", err);
     }
@@ -204,6 +232,43 @@ exports.getFreeGames = onRequest(
     } catch (err) {
       logger.error("getFreeGames error", err);
       res.status(500).json({ success: false, error: String(err) });
+    }
+  }
+);
+
+// ── Scheduled: expiry warning — runs every day at 09:00 UTC ───────────────
+exports.sendExpiryWarnings = onSchedule(
+  { schedule: "0 9 * * *", timeZone: "UTC", region: "asia-northeast1" },
+  async () => {
+    logger.info("Checking for expiring free games...");
+    const { sendExpiryWarningNotification } = require("./fcm_notify");
+    const now = Date.now();
+    const in24h = now + 24 * 60 * 60 * 1000;
+
+    try {
+      const snap = await db
+        .collection("gameOffers")
+        .where("status", "==", "free")
+        .get();
+
+      for (const doc of snap.docs) {
+        const data = doc.data();
+        if (!data.offerEnd) continue;
+        const endMs = new Date(data.offerEnd).getTime();
+        if (endMs > now && endMs <= in24h && !data.expiryWarningSentAt) {
+          try {
+            await sendExpiryWarningNotification({ id: doc.id, ...data });
+            await doc.ref.update({
+              expiryWarningSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            logger.info(`Expiry warning sent for ${data.title}`);
+          } catch (fcmErr) {
+            logger.warn(`Expiry FCM failed for ${data.title}:`, fcmErr.message);
+          }
+        }
+      }
+    } catch (err) {
+      logger.error("sendExpiryWarnings error", err);
     }
   }
 );
