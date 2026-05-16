@@ -9,8 +9,13 @@ import 'core/widgets/notification_badge.dart';
 import 'data/game_offer.dart' as data;
 import 'data/game_offer_repository.dart';
 import 'screens/game_detail_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Firebase initialization is deferred until google-services.json is configured
+  // await Firebase.initializeApp();
+  // await NotificationService().initialize();
   runApp(const FreeGameNotifierApp());
 }
 
@@ -583,7 +588,10 @@ class _SettingsViewState extends State<_SettingsView> {
           subtitle: '新しい無料ゲームが追加されたときに通知',
           trailing: Switch(
             value: _pushNotif,
-            onChanged: (v) => setState(() => _pushNotif = v),
+            onChanged: (v) {
+              setState(() => _pushNotif = v);
+              NotificationService().updateTopicSubscription('free_games', v);
+            },
           ),
         ),
         _SettingsTile(
@@ -591,7 +599,10 @@ class _SettingsViewState extends State<_SettingsView> {
           subtitle: '無料期間が24時間以内に終了するゲームを通知',
           trailing: Switch(
             value: _expiringNotif,
-            onChanged: (v) => setState(() => _expiringNotif = v),
+            onChanged: (v) {
+              setState(() => _expiringNotif = v);
+              NotificationService().updateTopicSubscription('expiry_warnings', v);
+            },
           ),
         ),
         _SettingsTile(

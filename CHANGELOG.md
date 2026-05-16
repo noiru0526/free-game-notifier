@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-16
+
+### Added
+- `lib/services/notification_service.dart` — Flutter FCM受信サービス (@noiru0526)
+  - `firebase_messaging` + `flutter_local_notifications` によるプッシュ受信
+  - フォアグラウンド受信時にローカル通知を表示
+  - `free_games` / `expiry_warnings` トピックへの自動購読
+  - `updateTopicSubscription()` — 設定画面からトピック購読ON/OFF
+  - Android通知チャンネル: `free_games`（重要度高）/ `expiry_warning`（重要度最大）
+  - iOS APNs権限リクエスト
+
+### Changed
+- `pubspec.yaml` — Firebase依存パッケージ追加
+  - `firebase_core: ^3.6.0`
+  - `firebase_messaging: ^15.1.4`
+  - `flutter_local_notifications: ^17.2.3`
+- `lib/main.dart` — NotificationService初期化コード追加（Firebase設定後に有効化）
+- `lib/main.dart` — 設定画面の通知スイッチをFCMトピック購読に接続
+
 ## [0.1.9] - 2026-05-16
 
 ### Added
