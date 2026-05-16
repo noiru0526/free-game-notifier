@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-16
+
+### Changed
+- `lib/data/game_offer_repository.dart` — MockRepositoryのサンプルデータを充実 (@noiru0526)
+  - 5タイトルに増加（Death Stranding / Control / Cyberpunk / Alien: Isolation / TF2）
+  - 実際のCDN URLからサムネイルを読み込み
+  - metacritic・rating・aiRecommendationフィールドを追加
+  - GOG・Steamのゲームを追加してマルチプラットフォームUIをテスト可能に
+
 ## [0.2.4] - 2026-05-16
 
 ### Changed
