@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    final newCount = _sampleOffers.where((o) => o.isNew).length;
+    const newCount = 0;
 
     return Scaffold(
       appBar: AppBar(

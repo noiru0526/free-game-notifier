@@ -66,7 +66,7 @@ abstract class AppTheme {
       ),
 
       // Card — game card style
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.bgSurface,
         elevation: 0,
         margin: EdgeInsets.zero,
