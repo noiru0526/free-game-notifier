@@ -8,6 +8,7 @@ import 'core/widgets/game_card.dart';
 import 'core/widgets/notification_badge.dart';
 import 'data/game_offer.dart' as data;
 import 'data/game_offer_repository.dart';
+import 'screens/game_detail_screen.dart';
 
 void main() {
   runApp(const FreeGameNotifierApp());
@@ -367,7 +368,16 @@ class _OfferTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-      child: GameCard(offer: gameOffer, onTap: () {}, onClaim: onClaim),
+      child: GameCard(
+        offer: gameOffer,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GameDetailScreen(offer: offer),
+          ),
+        ),
+        onClaim: onClaim,
+      ),
     );
   }
 

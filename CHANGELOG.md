@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-16
+
+### Added
+- `lib/screens/game_detail_screen.dart` — ゲーム詳細画面 (@noiru0526)
+  - SliverAppBar + サムネイル/プレースホルダー表示
+  - `_CountdownCard` — リアルタイムカウントダウン（日/時間/分/秒をTimer.periodicで更新）
+  - プラットフォームバッジ（Epic/Steam/GOG）
+  - ジャンルチップ一覧
+  - 「ストアで無料入手」/ 「準備中」CTAボタン
+  - `_OfferTile.onTap` → GameDetailScreenへのNavigator.push 接続
+
 ## [0.1.2] - 2026-05-16
 
 ### Added
