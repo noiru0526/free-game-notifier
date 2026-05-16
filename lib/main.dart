@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_spacing.dart';
 import 'core/theme/app_theme.dart';
@@ -9,6 +10,7 @@ import 'core/widgets/notification_badge.dart';
 import 'data/game_offer.dart' as data;
 import 'data/game_offer_repository.dart';
 import 'screens/game_detail_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/notification_service.dart';
 
 void main() async {
@@ -46,6 +48,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
+  bool _onboardingDone = true;
 
   static const _screens = [
     _GameListView(),
@@ -54,7 +57,27 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    final done = prefs.getBool('onboarding_done') ?? false;
+    if (!done && mounted) {
+      setState(() => _onboardingDone = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_onboardingDone) {
+      return OnboardingScreen(onComplete: () {
+        setState(() => _onboardingDone = true);
+      });
+    }
+
     final newCount = _sampleOffers.where((o) => o.isNew).length;
 
     return Scaffold(

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-16
+
+### Added
+- `lib/screens/onboarding_screen.dart` — オンボーディング画面 (@noiru0526)
+  - 3ページ構成：ウェルカム / ストア選択 / ジャンル選択
+  - アニメーション付きページインジケーター（選択中は横伸び）
+  - ストア選択: Epic/Steam/GOG/EA App/itch.io（アイコン・色分け）
+  - ジャンル選択: 10ジャンルをWrapレイアウトで表示
+  - SharedPreferencesへの保存（onboarding_done / selected_stores / selected_genres）
+
+### Changed
+- `lib/main.dart` — HomeScreenにオンボーディングチェックを追加
+  - initStateでonboarding_doneフラグを確認
+  - 未完了の場合はOnboardingScreenを表示
+
 ## [0.2.0] - 2026-05-16
 
 ### Added
