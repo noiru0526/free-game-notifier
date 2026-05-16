@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-16
+
+### Added
+- `functions/gog_games.js` — GOG.com / Steam 無料ゲーム取得 (@noiru0526)
+  - `fetchGOGFreeGames()`: GOG公開APIから価格0のゲームを取得
+  - `fetchSteamFreeGames()`: SteamSpy APIからF2Pゲーム一覧を取得
+- `functions/index.js` — `fetchOtherStoreFreeGames` スケジュール関数追加
+  - 毎日10:00 UTC に GOG/Steam の無料ゲームをFetch→Firestore保存→FCM通知
+
 ## [0.2.1] - 2026-05-16
 
 ### Added

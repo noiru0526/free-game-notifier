@@ -7,6 +7,7 @@ const https = require("https");
 const { enrichGameWithRAWG } = require("./rawg");
 const { generateRecommendation } = require("./claude_recommend");
 const { sendFreeGameNotification } = require("./fcm_notify");
+const { fetchGOGFreeGames, fetchSteamFreeGames } = require("./gog_games");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -269,6 +270,50 @@ exports.sendExpiryWarnings = onSchedule(
       }
     } catch (err) {
       logger.error("sendExpiryWarnings error", err);
+    }
+  }
+);
+
+// ── Scheduled: GOG + Steam free games (daily at 10:00 UTC) ──────────────────
+exports.fetchOtherStoreFreeGames = onSchedule(
+  { schedule: "0 10 * * *", timeZone: "UTC", region: "asia-northeast1" },
+  async () => {
+    logger.info("Fetching GOG and Steam free games...");
+    try {
+      const [gogGames, steamGames] = await Promise.all([
+        fetchGOGFreeGames().catch((e) => { logger.warn("GOG fetch error:", e.message); return []; }),
+        fetchSteamFreeGames().catch((e) => { logger.warn("Steam fetch error:", e.message); return []; }),
+      ]);
+      const allGames = [...gogGames, ...steamGames];
+      logger.info(`GOG: ${gogGames.length}, Steam: ${steamGames.length} free games`);
+
+      if (allGames.length === 0) return;
+      const batch = db.batch();
+      for (const game of allGames) {
+        const ref = db.collection("gameOffers").doc(`${game.platform}_${game.id}`);
+        batch.set(ref, {
+          ...game,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+      await batch.commit();
+      logger.info(`Saved ${allGames.length} GOG/Steam offers to Firestore`);
+
+      // Send FCM for new free games
+      for (const game of allGames) {
+        try {
+          const docSnap = await db.collection("gameOffers").doc(`${game.platform}_${game.id}`).get();
+          if (docSnap.exists && docSnap.data()?.fcmNotifiedAt) continue;
+          await sendFreeGameNotification(game);
+          await db.collection("gameOffers").doc(`${game.platform}_${game.id}`).update({
+            fcmNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        } catch (fcmErr) {
+          logger.warn(`FCM failed for ${game.title}:`, fcmErr.message);
+        }
+      }
+    } catch (err) {
+      logger.error("fetchOtherStoreFreeGames error", err);
     }
   }
 );
