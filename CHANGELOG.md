@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-16
+
+### Added
+- `functions/index.js` — Epic Games API連携Cloud Functions実装 (@noiru0526)
+  - `fetchEpicFreeGames` — 毎週木曜日9:00 UTC（18:00 JST）に自動実行されるスケジュール関数
+  - `fetchEpicNow` — HTTP POSTで手動フェッチ（テスト用）
+  - `fetchJSON` helper — Node.js標準httpsモジュールでEpic APIを取得
+  - `extractEpicOffers` — Epicレスポンスから無料/upcoming/期限切れのオファーを抽出
+  - `getFreeGames` — FirestoreからCORS対応で無料ゲームを返すHTTPエンドポイント
+  - Firestore: `gameOffers` コレクションに `epic_{id}` ドキュメントで保存
+
+## [0.1.0] - 2026-05-16
+
+### Added
+- Gaming/Steam-inspired デザインシステム全体構築 (@noiru0526)
+  - `lib/core/theme/app_colors.dart` — Navy/Blue/Cyan カラーパレット (Steamダークテーマ)
+  - `lib/core/theme/app_typography.dart` — タイポグラフィスケール (display/h1-h4/body/label/timer/price)
+  - `lib/core/theme/app_spacing.dart` — 4pxベーススペーシングシステム
+  - `lib/core/theme/app_theme.dart` — 完全な MaterialApp ThemeData (dark mode)
+  - `lib/core/widgets/game_card.dart` — GameCard + GameOffer モデル
+  - `lib/core/widgets/category_chip.dart` — CategoryChip + CategoryChipRow (フィルター可)
+  - `lib/core/widgets/notification_badge.dart` — NotificationBadge + PulsingDot
+- `lib/main.dart` 更新: サンプルデータ + ホーム/検索/設定画面でデザインシステムを適用
+
 ## [0.0.4] - 2026-03-30
 
 ### Added
