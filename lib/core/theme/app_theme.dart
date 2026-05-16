@@ -167,7 +167,7 @@ abstract class AppTheme {
         space: 0,
       ),
 
-      // Bottom navigation
+      // Bottom navigation (legacy, kept for compatibility)
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.bgSurface,
         selectedItemColor: AppColors.interactivePrimary,
@@ -176,6 +176,28 @@ abstract class AppTheme {
         elevation: 8,
         selectedLabelStyle: AppTypography.labelSmall,
         unselectedLabelStyle: AppTypography.labelSmall,
+      ),
+
+      // Material 3 NavigationBar
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.bgSurface,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black,
+        elevation: 8,
+        indicatorColor: AppColors.interactivePrimary.withOpacity(0.2),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTypography.labelSmall
+                .copyWith(color: AppColors.interactivePrimary);
+          }
+          return AppTypography.labelSmall.copyWith(color: AppColors.textMuted);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.interactivePrimary, size: 22);
+          }
+          return const IconThemeData(color: AppColors.textMuted, size: 22);
+        }),
       ),
 
       // Snackbar / toast

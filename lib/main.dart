@@ -105,22 +105,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: _screens[_navIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex,
-        onTap: (i) => setState(() => _navIndex = i),
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _navIndex,
+        onDestinationSelected: (i) => setState(() => _navIndex = i),
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.videogame_asset_outlined),
-            activeIcon: Icon(Icons.videogame_asset),
+            selectedIcon: Icon(Icons.videogame_asset),
             label: 'ゲーム',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.search),
             label: '検索',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
+            selectedIcon: Icon(Icons.settings),
             label: '設定',
           ),
         ],
@@ -244,6 +244,11 @@ class _GameListViewState extends State<_GameListView> {
                   ),
                 ),
               ),
+              if (freeNow.isNotEmpty || expiringSoon.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _StatsBanner(
+                      freeCount: freeNow.length + expiringSoon.length),
+                ),
               // ── Hero: まもなく終了（大判カード）──
               if (expiringSoon.isNotEmpty) ...[
                 SliverToBoxAdapter(
@@ -302,27 +307,37 @@ class _GameListViewState extends State<_GameListView> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
-                    child: Text('無料で入手できるゲーム', style: AppTypography.h4),
+                    child: Row(
+                      children: [
+                        Text('無料で入手できるゲーム', style: AppTypography.h4),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Text(
+                            'すべて見る →',
+                            style: AppTypography.labelSmall
+                                .copyWith(color: AppColors.interactiveAccent),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.sm,
-                      mainAxisSpacing: AppSpacing.sm,
-                      childAspectRatio: 0.72,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) => GameCard(
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: ShelfGameCard.kHeight + 28,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      itemCount: freeNow.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (_, i) => ShelfGameCard(
                         offer: _OfferTile(offer: freeNow[i]).toHeroGameOffer(),
                         onTap: () => Navigator.push(context, MaterialPageRoute(
                           builder: (_) => GameDetailScreen(offer: freeNow[i]),
                         )),
-                        onClaim: () => _showClaimDialog(context, freeNow[i]),
                       ),
-                      childCount: freeNow.length,
                     ),
                   ),
                 ),
@@ -337,28 +352,33 @@ class _GameListViewState extends State<_GameListView> {
                         Icon(Icons.schedule, size: 14, color: AppColors.textMuted),
                         const SizedBox(width: AppSpacing.xs),
                         Text('近日無料予定',
-                            style: AppTypography.h4.copyWith(color: AppColors.textMuted)),
+                            style: AppTypography.h4
+                                .copyWith(color: AppColors.textMuted)),
+                        const Spacer(),
+                        Text(
+                          'カレンダーに追加 →',
+                          style: AppTypography.labelSmall
+                              .copyWith(color: AppColors.textMuted),
+                        ),
                       ],
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.sm,
-                      mainAxisSpacing: AppSpacing.sm,
-                      childAspectRatio: 0.72,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) => GameCard(
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: ShelfGameCard.kHeight + 28,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      itemCount: upcoming.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (_, i) => ShelfGameCard(
                         offer: _OfferTile(offer: upcoming[i]).toHeroGameOffer(),
                         onTap: () => Navigator.push(context, MaterialPageRoute(
                           builder: (_) => GameDetailScreen(offer: upcoming[i]),
                         )),
                       ),
-                      childCount: upcoming.length,
                     ),
                   ),
                 ),
@@ -883,6 +903,50 @@ class _SettingsViewState extends State<_SettingsView> {
 
         const SizedBox(height: AppSpacing.xl4),
       ],
+    );
+  }
+}
+
+class _StatsBanner extends StatelessWidget {
+  final int freeCount;
+  const _StatsBanner({required this.freeCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 0),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.interactivePrimary.withOpacity(0.18),
+            AppColors.interactiveAccent.withOpacity(0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(
+          color: AppColors.interactivePrimary.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.local_fire_department,
+              color: AppColors.interactivePrimary, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            '今すぐ $freeCount 本が無料！',
+            style: AppTypography.body.copyWith(
+              color: AppColors.interactivePrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const Spacer(),
+          const Icon(Icons.arrow_forward_ios,
+              color: AppColors.textMuted, size: 12),
+        ],
+      ),
     );
   }
 }

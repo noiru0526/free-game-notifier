@@ -686,3 +686,101 @@ class _ClaimedStamp extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────
+// Shelf Card — Netflix-style horizontal carousel thumbnail
+// ─────────────────────────────────────────────
+class ShelfGameCard extends StatelessWidget {
+  final GameOffer offer;
+  final VoidCallback? onTap;
+
+  static const double kWidth  = 158.0;
+  static const double kHeight = 100.0;
+
+  const ShelfGameCard({super.key, required this.offer, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: kWidth,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.cardRadius - 2),
+              child: SizedBox(
+                width: kWidth,
+                height: kHeight,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (offer.thumbnailUrl != null)
+                      Image.network(
+                        offer.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _PlaceholderImage(offer: offer),
+                      )
+                    else
+                      _PlaceholderImage(offer: offer),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.65),
+                            ],
+                            stops: const [0.4, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: _PlatformBadge(platform: offer.platform),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: _FreeBadge(offer: offer),
+                    ),
+                    if (offer.expiresAt != null)
+                      Positioned(
+                        bottom: 4,
+                        left: 4,
+                        child: _CountdownTimer(expiresAt: offer.expiresAt!),
+                      ),
+                    if (offer.status == GameStatus.claimed)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.55),
+                          alignment: Alignment.center,
+                          child: const _ClaimedStamp(),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              offer.title,
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

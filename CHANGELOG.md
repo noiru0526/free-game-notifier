@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-17
+
+### Changed (UIリデザイン Round 2 — Netflix/Spotify スタイル)
+- `lib/core/widgets/game_card.dart`
+  - `ShelfGameCard` 追加 — Netflix風ホリゾンタルカルーセル用サムネイルカード（158×100px・16:9ライク）
+    - 画像全面 + 下部グラデーション + プラットフォーム/FREEバッジ + カウントダウン
+- `lib/main.dart`
+  - `BottomNavigationBar` → Material 3 `NavigationBar` に置き換え（ピルインジケーター表示）
+  - 「無料で入手できるゲーム」セクション: SliverGrid 2列 → ホリゾンタルカルーセル（ShelfGameCard使用）
+  - 「近日無料予定」セクション: SliverGrid 2列 → ホリゾンタルカルーセル（ShelfGameCard使用）
+  - 各セクションヘッダーに「すべて見る →」「カレンダーに追加 →」リンク追加
+  - `_StatsBanner` 追加 — 「今すぐ N 本が無料！」を炎アイコン付きで表示（カテゴリフィルター連動）
+- `lib/core/theme/app_theme.dart`
+  - `navigationBarTheme` 追加 — ピルインジケーター・選択色・アイコンサイズをブランドカラーに統一
+
+### UI改善の根拠（調査結果）
+- Netflix: ホリゾンタルカルーセル棚がコンテンツ発見性を高める
+- Spotify: 各セクションに「すべて見る」リンクでフル一覧への導線確保
+- 2026 Material3トレンド: NavigationBar（ピルインジケーター）がBottomNavigationBarより視認性が高い
+
 ## [0.3.0] - 2026-05-17
 
 ### Changed (UIフルリデザイン Round 1)
