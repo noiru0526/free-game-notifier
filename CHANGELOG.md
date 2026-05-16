@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-16
+
+### Added
+- `functions/rawg.js` — RAWG Video Games Database API ユーティリティ (@noiru0526)
+  - `enrichGameWithRAWG()`: ゲームタイトルでRAWG検索→metacritic/rating/genres/tagsを取得
+  - `getGameScreenshots()`: RAWG IDでスクリーンショット最大4枚を取得
+  - `process.env.RAWG_API_KEY` でFirebase Secretから取得する設計
+
+### Changed
+- `functions/index.js` — スケジュール関数にRAWG連携を追加
+  - 無料ゲームのみを対象にRAWGデータをFirestoreに追記（merge）
+  - RAWG_API_KEYがない場合はスキップ（graceful degradation）
+
 ## [0.1.5] - 2026-05-16
 
 ### Changed

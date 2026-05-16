@@ -4,6 +4,7 @@ const { onSchedule } = require("firebase-functions/scheduler");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const https = require("https");
+const { enrichGameWithRAWG } = require("./rawg");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -89,6 +90,9 @@ exports.fetchEpicFreeGames = onSchedule(
   { schedule: "0 9 * * 4", timeZone: "UTC", region: "asia-northeast1" },
   async () => {
     logger.info("Fetching Epic Games free promotions...");
+    // RAWG API key: set via Firebase Secret or environment variable
+    const rawgKey = process.env.RAWG_API_KEY ?? null;
+
     try {
       const json = await fetchJSON(EPIC_API_URL);
       const offers = extractEpicOffers(json);
@@ -96,8 +100,26 @@ exports.fetchEpicFreeGames = onSchedule(
 
       const batch = db.batch();
       for (const offer of offers) {
+        // Enrich with RAWG metadata if API key is available
+        let rawgData = null;
+        if (rawgKey && offer.status === "free") {
+          rawgData = await enrichGameWithRAWG(offer.title, rawgKey);
+          if (rawgData) logger.info(`RAWG enriched: ${offer.title}`);
+        }
+
         const ref = db.collection("gameOffers").doc(`epic_${offer.id}`);
-        batch.set(ref, offer, { merge: true });
+        batch.set(ref, {
+          ...offer,
+          ...(rawgData ? {
+            metacritic: rawgData.metacritic,
+            rating: rawgData.rating,
+            backgroundImage: rawgData.backgroundImage,
+            rawgGenres: rawgData.genres,
+            rawgTags: rawgData.tags,
+            released: rawgData.released,
+            playtime: rawgData.playtime,
+          } : {}),
+        }, { merge: true });
       }
       await batch.commit();
       logger.info("Epic offers saved to Firestore");
